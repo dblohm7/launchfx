@@ -38,7 +38,6 @@ int wmain(int argc, wchar_t* argv[])
   STARTUPINFOEXW siex;
   ZeroMemory(&siex, sizeof(siex));
   siex.StartupInfo.cb = sizeof(STARTUPINFOEXW);
-  siex.StartupInfo.lpDesktop = L"winsta0\\Default";
   SIZE_T listSize = 0;
   DWORD err;
   if (!InitializeProcThreadAttributeList(nullptr, 1, 0, &listSize) && (err = GetLastError()) != ERROR_INSUFFICIENT_BUFFER) {
