@@ -3,27 +3,37 @@
 #define _WIN32_WINNT 0x0A00
 
 #include <windows.h>
-#include <memory>
+
 #include <iostream>
+#include <memory>
 #include <string>
 #include <sstream>
 #include <string.h>
 
 using namespace std;
 
-int wmain(int argc, wchar_t*argv[])
+static wstring
+BuildCommandLine(int argc, wchar_t* argv[])
 {
-  if (argc != 2) {
-    wcout << L"Usage: " << argv[0] << " <path_to_firefox_binary>" << endl;
+  // Just quote everything
+  wostringstream oss;
+  for (int i = 1; i < argc; ++i) {
+    oss << L"\"" << argv[i] << L"\" ";
+  }
+  return oss.str();
+}
+
+int wmain(int argc, wchar_t* argv[])
+{
+  if (argc < 2) {
+    wcout << L"Usage: " << argv[0] << " <path_to_firefox_binary> [firefox_command_line_options]" << endl;
     return 1;
   }
-  // wchar_t *exe = L"C:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe";
   wchar_t *exe = argv[1];
-  wostringstream oss;
-  oss << L"\"" << exe << L"\" -no-remote -profile \"C:\\Users\\dblohm7\\dumps\\profile\"";
-  const wstring& cls = oss.str();
+  const wstring& cls = BuildCommandLine(argc, argv);
   auto cl = make_unique<wchar_t[]>(cls.size() + 1);
   wcscpy(cl.get(), cls.c_str());
+  wcout << L"Using command line: " << cl.get() << endl;
 
   STARTUPINFOEXW siex;
   ZeroMemory(&siex, sizeof(siex));
@@ -41,7 +51,6 @@ int wmain(int argc, wchar_t*argv[])
     cout << "InitializeProcThreadAttributeList (2) failed" << endl;
     return 1;
   }
-  // DWORD64 policy = PROCESS_CREATION_MITIGATION_POLICY_EXTENSION_POINT_DISABLE_ALWAYS_ON;
   DWORD64 policy = PROCESS_CREATION_MITIGATION_POLICY_BLOCK_NON_MICROSOFT_BINARIES_ALWAYS_ON;
   if (!UpdateProcThreadAttribute(list, 0, PROC_THREAD_ATTRIBUTE_MITIGATION_POLICY, &policy, sizeof(policy), nullptr, nullptr)) {
     cout << "UpdateProcThreadAttribute failed" << endl;
